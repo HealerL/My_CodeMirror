@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-1.12.4.js" integrity="sha256-Qw82+bXyGq6MydymqBxNPYTaUXXq7c8v3CwiYwLLNXU=" crossorigin="anonymous"></script>
+
+
+    <style>
+
+        /* @media screen and ( max-width:800px) and (min-width:600px){
+            h1 {
+                width: 100%;
+                
+            }
+
+            .main {
+                width: 100%;
+            }
+
+            .result_box {
+                width: 100%;
+            }
+        } */
+
+
+
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        h1 {
+            margin: 10px auto;
+            width: 1000px;
+            padding: 0 10px;
+            
+        }
+
+        .main {
+            width: 1000px;
+            padding: 0 10px;
+            /* box-sizing: border-box; */
+            margin: 20px  auto;
+            /* display: flex;
+            justify-content: center; */
+            /* height: 600px; */
+            /* overflow: hidden; */
+
+            /* text-align: center; */
+        }
+        .code_box {
+            width: 100%;
+            margin: 0 auto;
+            
+        }
+
+        .control {
+            height: 60px;
+            margin: 10px 0;
+            line-height: 60px;
+        }
+
+        .button {
+            display: inline-block;
+            height: 40px;
+            width: 100px;
+            text-align: center;
+            line-height: 36px;
+            margin-right: 50px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            box-sizing: border-box;
+            border: 2px solid transparent;
+        }
+        #submit {
+            background-color: rgba(28, 79, 219, 0.5);
+        }
+        #clear {
+            background-color: rgb(233, 111, 135);
+            
+        }
+
+        .result_box {
+            width: 100%;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            /* flex-direction: column; */
+            /* border: 1px solid black; */
+            
+        }
+
+        .result {
+            height: 250px;
+            box-sizing: border-box;
+            width: 450px;
+            
+            
+        }
+        .error {
+            width: 450px;
+            height: 275px;
+        }
+        /* 红色错误信息 */
+        .error span {
+            color: red !important;
+        }
+
+        .r_title {
+            width: 100%;
+            text-align: center;
+            color: rgb(52, 17, 68);
+            font-size: 1.2em;
+            height: 30px;
+            background-color: rgba(193, 252, 153, 0.5);
+
+        }
+
+        .e_title {
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.2em;
+            height: 30px;
+            background-color: rgb(250, 159, 159);
+
+        }
+        .output {
+            border: 1px dashed dimgrey;
+            margin: 5px 15px;
+            overflow: auto;
+            height: 220px;
+            width: 270px;
+            background-color: white;
+        }
+
+    
+    </style>
+
+
+    <script src="lib/codemirror.js"></script>
+    <link rel="stylesheet" href="lib/codemirror.css">
+    <script src="mode/javascript.js"></script>
+    <link rel="stylesheet" href="theme/monokai.css">
+    <link rel="stylesheet" href="theme/3024-day.css">
+    <link rel="stylesheet" href="addon/fold/foldgutter.css">
+    <link rel="stylesheet" href="addon/search/matchesonscrollbar.css">
+    <script src="addon/fold/foldcode.js"></script>
+    <script src="addon/fold/foldgutter.js"></script>
+    <script src="addon/edit/matchbrackets.js"></script>
+    <script src="addon/edit/closebrackets.js"></script>
+
+    <script src="addon/search/search.js"></script>
+    <script src="addon/search/jump-to-line.js"></script>
+    <script src="addon/search/searchcursor.js"></script>
+    <script src="addon/scroll/annotatescrollbar.js"></script>
+    <script src="addon/search/matchesonscrollbar.js"></script>
+
+
+    <link rel="stylesheet" href="addon/dialog/dialog.css">
+    <script src="addon/dialog/dialog.js"></script>
+    
+    <script src="addon/hint/javascript-hint.js"></script>
+    <script src="addon/hint/show-hint.js"></script>
+    <link rel="stylesheet" href="addon/hint/show-hint.css">
+
+    <script src="addon/comment/comment.js"></script>
+    <script src="addon/comment/continuecomment.js"></script>
+   
+</head>
+
+<body>
+    <h1 class="title">在线代码测试</h1>
+
+    <div class="main">
+        
+        <div class="code_box">
+            <textarea name="" id="text" cols="30" rows="10"></textarea>
+        </div>
+        <div class="control">
+            <span id="submit" class="button">Run</span>
+            <span id="clear" class="button">Clear</span>
+        </div>
+        <div class="result_box">
+            <div class="result">
+                <div class="r_title">输出</div>
+                <div class="result_content output"></div>
+            </div>
+            <div class="error">
+                <div class="e_title">错误信息</div>
+                <div class="error_content output"></div>
+            </div>
+            
+        </div>
+        
+
+    </div>
+    
+
+    <script>
+        $(function(){
+            
+            var textarea = document.getElementById('text');
+          
+            var myCodeMirror = CodeMirror.fromTextArea(textarea, {
+                lineNumbers: true, // 显示行号
+                mode: 'javascript',
+                spellcheck: true,
+                autocorrect: true, 
+                theme: 'monokai', // 主题
+                foldGutter: true, 
+                matchBrackets: true, // 括号匹配
+                autoCloseBrackets: true, // 自动补全括号
+
+                extraKeys: {"Ctrl-Space": "autocomplete",
+                            'Ctrl-/': 'comment'
+                }
+            });
+
+            // let start_width = 0;
+            // if($(window).innerWidth()<1000){
+            //     start_width = $(window).innerWidth() - 50;
+            //     myCodeMirror.setSize(start_width + 'px', '300px');
+            // }
+            // else   myCodeMirror.setSize('1000px', '300px');
+            myCodeMirror.setSize('1000px', '300px');
+
+            var result_log = $('.result_content')[0];
+            var error_log = $('.error_content')[0];
+            let log_list = [result_log, error_log];
+            let mirror_list = [];
+            log_list.forEach(function(value){
+                let log_mirror = CodeMirror(function(newChild){
+                    value.parentNode.replaceChild(newChild, value);
+                }, {
+                    readOnly: true,
+                    lineNumbers: true,
+                    theme: '3024-day'
+                });
+                log_mirror.setSize('450px', '150px');
+
+                mirror_list.push(log_mirror);
+            });
+
+            
+            const doc_main = myCodeMirror.getDoc();
+            const doc_result = mirror_list[0].getDoc();
+            const doc_error = mirror_list[1].getDoc();
+
+            // 保存原始函数副本 劫持console的输出函数
+            const consoleProxy = {};
+
+            consoleProxy['log'] = window.console['log'];
+            consoleProxy['error'] = window.console['error'];
+
+            window.console['log'] = function(){
+                let previous = doc_result.getValue();
+                let new_value;
+                if (previous){
+                    new_value =  arguments[0]  + '\n' + previous;
+                }
+                else new_value = String(arguments[0]);
+                
+                doc_result.setValue(new_value);
+                consoleProxy['log'].apply(this, arguments);
+            }
+
+            
+            window.console['error'] = function(){
+                doc_error.setValue(String(arguments[0]));
+                consoleProxy['error'].apply(this, arguments);
+            }
+
+            const $submit = $('#submit');
+            const $clear =  $('#clear');
+
+
+            $submit.mousedown(function(){
+                $(this).css('border', '3px solid black');
+            });
+            $submit.mouseup(function(){
+                $(this).css('border', '3px solid transparent');
+            })
+
+
+            $clear.mousedown(function(){
+                $(this).css('border', '3px solid black');
+            });
+            $clear.mouseup(function(){
+                $(this).css('border', '3px solid transparent');
+            })
+
+            
+            $submit.click(function(){
+                // 清空结果区
+                doc_result.setValue('');
+                doc_error.setValue('');
+                new Promise(function (resolve, reject) {
+                    eval(doc_main.getValue());
+                }).catch(function(error) {
+                    console.error(error);
+                })
+            });
+
+            $clear.click(function(){
+                // 清除内容和结果区
+                doc_main.setValue('');
+                doc_result.setValue('');
+                doc_error.setValue('');
+
+                // 利用定时器的匿名ID特性，一次性清除所有的定时器
+                for(let i = 0; i < 9999; i++) {
+                    clearInterval(i);
+                }
+            })
+
+            // $(window).resize(function(){
+            //     if($(this).innerWidth() < 1000){
+            //         let width = $(this).innerWidth();
+            //         if (width < 400) width = 400;
+            //         myCodeMirror.setSize(width+'px', '300px');
+            //     }
+            // });
+        })
+        
+    </script>
+</body>
+</html> 
