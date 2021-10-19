@@ -258,15 +258,41 @@
             consoleProxy['log'] = window.console['log'];
             consoleProxy['error'] = window.console['error'];
 
+
+            // 检测之前的打印区是否有数据
+            const output = function(oldvalue, newinput){
+                let new_value;
+                if(oldvalue){
+                    new_value =  newinput + '\n' + oldvalue;
+                }
+                else{
+                    new_value =  String(newinput);
+                }
+                doc_result.setValue(new_value);
+            }
+
+            // 修改toString方法以正确打印对象类型的数据
+            Object.prototype.toString = function(){
+                let result = '{';
+                let key_array = Object.keys(this);
+                // 指向调用该方法的上下文对象
+                for(let i=0; i<key_array.length; i++){
+                    result += key_array[i]+ ':' + this[key_array[i]];
+                    // 除了末尾以外添加逗号
+                    if(i != key_array.length-1) result += ', ';
+                }
+                return result +'}';
+            }
+
             window.console['log'] = function(){
                 let previous = doc_result.getValue();
                 let new_value;
-                if (previous){
-                    new_value =  arguments[0]  + '\n' + previous;
-                }
-                else new_value = String(arguments[0]);
-                
-                doc_result.setValue(new_value);
+
+                // 处理一个consolelog中多个数据的情况
+                let data = Array.prototype.slice.call(arguments);
+                let data_str = data.join(' ');
+
+                output(previous, data_str);
                 consoleProxy['log'].apply(this, arguments);
             }
 
