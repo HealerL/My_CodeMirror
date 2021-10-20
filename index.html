@@ -263,7 +263,7 @@
             const output = function(oldvalue, newinput){
                 let new_value;
                 if(oldvalue){
-                    new_value =  newinput + '\n' + oldvalue;
+                    new_value =  oldvalue + '\n' + newinput;
                 }
                 else{
                     new_value =  String(newinput);
@@ -282,6 +282,22 @@
                     if(i != key_array.length-1) result += ', ';
                 }
                 return result +'}';
+            }
+            // 修改slice方法以正确打印undefined和null
+            Array.prototype.slice = function(start=0, end=this.length){
+                const res = new Array();
+                for(let i=start; i<end; i++){
+                    if(this[i] === undefined){
+                        res.push('undefined');
+                    }
+                    else if(this[i] === null){
+                        res.push('null');
+                    }
+                    else{
+                        res.push(this[i]);
+                    }
+                }
+                return res;
             }
 
             window.console['log'] = function(){
