@@ -48,10 +48,10 @@ $(function(){
     const doc_error = mirror_list[1].getDoc();
 
     // 保存原始函数副本 劫持console的输出函数
-    const consoleProxy = {};
+    const funcProxy = {};
 
-    consoleProxy['log'] = window.console['log'];
-    consoleProxy['error'] = window.console['error'];
+    funcProxy['log'] = window.console['log'];
+    funcProxy['error'] = window.console['error'];
 
 
     // 检测之前的打印区是否有数据
@@ -65,9 +65,11 @@ $(function(){
         }
         doc_result.setValue(new_value);
     }
-
+    funcProxy['protoString'] = Object.prototype.toString;
+    
     // 修改toString方法以正确打印对象类型的数据
     Object.prototype.toString = function(){
+        if(this instanceof Function || this instanceof Array) return funcProxy['protoString'].call(this);
         let result = '{';
         let key_array = Object.keys(this);
         // 指向调用该方法的上下文对象
@@ -81,8 +83,11 @@ $(function(){
     // 修改slice方法以正确打印undefined和null
     Array.prototype.slice = function(start=0, end=this.length){
         const res = new Array();
+        if(start < 0) start += this.length;
+        if(end < 0) end += this.length;
+        
         for(let i=start; i<end; i++){
-            if(this[i] === undefined){
+            if(typeof this[i] === undefined){
                 res.push('undefined');
             }
             else if(this[i] === null){
@@ -100,17 +105,18 @@ $(function(){
         let new_value;
 
         // 处理一个consolelog中多个数据的情况
+        
         let data = Array.prototype.slice.call(arguments);
         let data_str = data.join(' ');
 
         output(previous, data_str);
-        consoleProxy['log'].apply(this, arguments);
+        funcProxy['log'].apply(this, arguments);
     }
 
     
     window.console['error'] = function(){
         doc_error.setValue(String(arguments[0]));
-        consoleProxy['error'].apply(this, arguments);
+        funcProxy['error'].apply(this, arguments);
     }
 
     const $submit = $('#submit');
