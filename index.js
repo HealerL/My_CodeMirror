@@ -69,7 +69,18 @@ $(function(){
     
     // 修改toString方法以正确打印对象类型的数据
     Object.prototype.toString = function(){
+        // 处理数组和函数类型 打印数组和函数时会优先调用它们自身的tostring方法，这里只是为了正常输出通过object调用的结果
         if(this instanceof Function || this instanceof Array) return funcProxy['protoString'].call(this);
+        // 处理map类型
+        if(this instanceof Map){
+            return Object.prototype.toString.call(map2Obj(this));
+        }
+        // 处理set类型
+        if(this instanceof Set){
+            let temp = [...this];
+            return Array.prototype.toString.call(temp);
+        }
+        // 处理对象类型
         let result = '{';
         let key_array = Object.keys(this);
         // 指向调用该方法的上下文对象
@@ -80,6 +91,15 @@ $(function(){
         }
         return result +'}';
     }
+
+    function map2Obj(map){
+        let obj = {};
+        for(let [key, value] of map){
+            obj[key] = value;
+        }
+        return obj;
+    }
+
     // 修改slice方法以正确打印undefined和null
     Array.prototype.slice = function(start=0, end=this.length){
         const res = new Array();
