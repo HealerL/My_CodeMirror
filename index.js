@@ -65,19 +65,19 @@ $(function(){
         }
         doc_result.setValue(new_value);
     }
-    funcProxy['protoString'] = Object.prototype.toString;
+    funcProxy['obj2String'] = Object.prototype.toString;
     
-    // 修改toString方法以正确打印对象类型的数据
+    // 修改toString方法以正确打印对象类型的数据 集合按照数组形式输出，map按照对象形式输出
     Object.prototype.toString = function(){
         // 处理数组和函数类型 打印数组和函数时会优先调用它们自身的tostring方法，这里只是为了正常输出通过object调用的结果
-        if(this instanceof Function || this instanceof Array) return funcProxy['protoString'].call(this);
+        if(this instanceof Function || this instanceof Array) return funcProxy['obj2String'].call(this);
         // 处理map类型
         if(this instanceof Map){
             return Object.prototype.toString.call(map2Obj(this));
         }
         // 处理set类型
         if(this instanceof Set){
-            let temp = [...this];
+            let temp = Array.prototype.slice.call([...this]);
             return Array.prototype.toString.call(temp);
         }
         // 处理对象类型
@@ -85,12 +85,42 @@ $(function(){
         let key_array = Object.keys(this);
         // 指向调用该方法的上下文对象
         for(let i=0; i<key_array.length; i++){
-            result += key_array[i]+ ':' + this[key_array[i]];
+            let value;
+            if(this[key_array[i]] instanceof Array) value = Array.prototype.toString.call(this[key_array[i]]);
+            // 递归处理对象类型数据 因为call调用导致数据会转为对象进行调用，所以不能在函数开头判断this是否是对象，this就是个对象
+            // 因为null在typeof也会返回object，所以要注意
+            else if(typeof this[key_array[i]] === 'object' && this[key_array[i]] != null) value = Object.prototype.toString.call(this[key_array[i]])
+            else value = this[key_array[i]];
+
+            result += key_array[i]+ ':' + value;
+            
             // 除了末尾以外添加逗号
             if(i != key_array.length-1) result += ', ';
         }
         return result +'}';
     }
+
+    funcProxy['arr2String'] = Array.prototype.toString;
+    // 数组输出加个方括号
+    Array.prototype.toString = function(){
+        let res = [];
+        // let strRes = funcProxy['arr2String'].call(this);
+        const len = this.length;
+        for(let i=0; i<len; i++){
+            let value;
+            if(this[i] instanceof Array){
+                value = Array.prototype.toString.call(this[i]);
+            }
+            else if(typeof this[i] === 'object'){
+                value = Object.prototype.toString.call(this[i]);
+            }
+            else value = this[i];
+            res.push(value);
+        }
+        let strRes = res.join(',');
+        return `[${strRes}]`;        
+    }
+
 
     function map2Obj(map){
         let obj = {};
@@ -99,7 +129,6 @@ $(function(){
         }
         return obj;
     }
-
     // 修改slice方法以正确打印undefined和null
     Array.prototype.slice = function(start=0, end=this.length){
         const res = new Array();
@@ -107,11 +136,15 @@ $(function(){
         if(end < 0) end += this.length;
         
         for(let i=start; i<end; i++){
-            if(typeof this[i] === undefined){
+            if(this[i] === undefined){
                 res.push('undefined');
             }
             else if(this[i] === null){
                 res.push('null');
+            }
+            else if(this[i] instanceof Array){
+                let temp = Array.prototype.slice.call(this[i]);
+                res.push(temp);
             }
             else{
                 res.push(this[i]);
