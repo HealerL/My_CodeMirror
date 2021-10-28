@@ -69,6 +69,7 @@ $(function(){
     
     // 修改toString方法以正确打印对象类型的数据 集合按照数组形式输出，map按照对象形式输出
     Object.prototype.toString = function(){
+        if(this === window) return  funcProxy['obj2String'].call(this);
         // 处理数组和函数类型 打印数组和函数时会优先调用它们自身的tostring方法，这里只是为了正常输出通过object调用的结果
         if(this instanceof Function || this instanceof Array) return funcProxy['obj2String'].call(this);
         // 处理map类型
